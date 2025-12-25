@@ -29,6 +29,24 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import io
+import re
+
+ILLEGAL_CHARACTERS_RE = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
+
+def remove_illegal_excel_chars(df):
+    """
+    Remove illegal control characters that break Excel (openpyxl).
+    Applied only to object (string) columns.
+    """
+    df = df.copy()
+    for col in df.select_dtypes(include=["object"]).columns:
+        df[col] = (
+            df[col]
+            .astype(str)
+            .apply(lambda x: ILLEGAL_CHARACTERS_RE.sub("", x))
+        )
+    return df
+
 
 # ============================================================================
 # HELPER FUNCTIONS - DATA TYPE DETECTION
@@ -70,7 +88,7 @@ def detect_column_types(df):
             
             # Try datetime conversion
             try:
-                pd.to_datetime(sample, errors='raise')
+                pd.to_datetime(sample, errors='raise', infer_datetime_format=True)
                 column_types[col] = 'datetime'
                 continue
             except:
@@ -585,8 +603,10 @@ def main():
             with col2:
                 # Excel download
                 buffer = io.BytesIO()
+                safe_df = remove_illegal_excel_chars(df_cleaned)
                 with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                    df_cleaned.to_excel(writer, index=False, sheet_name='Cleaned Data')
+                    safe_df.to_excel(writer, index=False, sheet_name='Cleaned Data')
+
                 
                 st.download_button(
                     label="📥 Download as Excel",
