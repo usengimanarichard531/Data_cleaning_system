@@ -1,5 +1,11 @@
-streamlit
-pandas
-numpy
+# streamlit
+# pandas
+# numpy
 matplotlib
-plotly
+streamlit>=1.26.0
+pandas>=2.0.0
+numpy>=1.26.0
+plotly>=6.9.0
+openpyxl>=3.1.0
+xlrd>=2.0.1
+xlsxwriter>=3.1.2
